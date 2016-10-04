@@ -1,0 +1,71 @@
+version: '2'
+
+services:
+
+### Nginx Server Container ##################################
+
+    nginx:
+        container_name: ik-nginx
+        build: ./nginx
+        volumes_from:
+            - volumes_source
+        volumes:
+            - ./logs/nginx/:/var/log/nginx
+        ports:
+            - "80:80"
+            - "443:443"
+        links:
+            - php-fpm
+
+### MySQL Container #########################################
+
+    mysql:
+        container_name: ik-mysql
+        build: ./mysql
+        volumes_from:
+            - volumes_data
+        ports:
+            - "33061:3306"
+        environment:
+            MYSQL_DATABASE: homestead
+            MYSQL_USER: homestead
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: root
+
+### Redis Container #########################################
+
+    redis:
+        container_name: ik-redis
+        build: ./redis
+        volumes_from:
+            - volumes_data
+        ports:
+            - "6379:6379"
+
+
+    php-fpm:
+        container_name: ik-php-fpm
+        build: ./php-fpm
+        volumes_from:
+            - volumes_source
+        expose:
+            - "9000"
+        links:
+            - mysql
+            - redis
+
+### Application Code Container ######################
+
+    volumes_source:
+        image: tianon/true
+        volumes:
+            - ../:/var/www
+
+### Databases Data Container ################################
+
+    volumes_data:
+        image: tianon/true
+        volumes:
+            - ./data/mysql:/var/lib/mysql
+            - ./data/redis:/data
+            - ./data/sessions:/sessions
